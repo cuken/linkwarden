@@ -1,0 +1,38 @@
+version: '3.8'
+
+volumnes:
+  - postgres
+
+services:
+
+  linkwarden:
+    image: linkwarden
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: deploy
+    ports:
+      - 3000:3000
+
+  linkwarden-db:
+    container_name: linkwarden-db
+    image: postgres
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    profiles: ["all", "linkwarden"]
+    networks:
+      - linkwarden
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d linkwarden -U linkwarden || exit 1"]
+      interval: 5s
+      timeout: 5s
+      start_period: 30s
+      retries: 10
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+      POSTGRES_USER: linkwarden
+      POSTGRES_PASSWORD: Linkwarden123!
+      POSTGRES_DB: linkwarden
+    volumes:
+      - postgres
